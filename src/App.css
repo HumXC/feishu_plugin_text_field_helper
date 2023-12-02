@@ -1,0 +1,21 @@
+@import 'reset-css';
+
+.main {
+  padding: 1rem 1rem 1rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.mainItem {
+  margin-top: 1rem;
+}
+
+.workspace {
+  display: flex;
+  flex-direction: column;
+}
+
+.workspace>* {
+  margin-top: 1rem;
+}
