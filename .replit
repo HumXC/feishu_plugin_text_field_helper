@@ -7,6 +7,7 @@ hidden = [".config", "tsconfig.json", "tsconfig.node.json", "vite.config.js", ".
 channel = "stable-22_11"
 
 [env]
+XDG_CONFIG_HOME = "$REPL_HOME/.config"
 PATH = "/home/runner/$REPL_SLUG/.config/npm/node_global/bin:/home/runner/$REPL_SLUG/node_modules/.bin"
 npm_config_prefix = "/home/runner/$REPL_SLUG/.config/npm/node_global"
 
