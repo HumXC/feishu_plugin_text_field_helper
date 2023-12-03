@@ -1,6 +1,6 @@
 import { Button, Card, Empty, Input, Slider, Switch, Tag, Toast, Tooltip } from '@douyinfe/semi-ui';
 import './App.css';
-import { bitable, ITable, FieldType, IOpenSegment, IField } from "@lark-base-open/js-sdk";
+import { bitable, ITable, FieldType, IOpenSegment, IField, IOpenSegmentType } from "@lark-base-open/js-sdk";
 import React, { useState, useEffect, } from 'react';
 import { Select, Typography } from '@douyinfe/semi-ui';
 import { IconSmallTriangleDown } from '@douyinfe/semi-icons'
@@ -188,7 +188,7 @@ const WorkspaceReplace: React.FC<{ table: ITable, fieldId: string }> = ({ table,
             + NumberToIndexString(index + 1, indexConfig.type)
             + newValue.substring(indexConfig.position)
         }
-        return newText
+        return [{ type: IOpenSegmentType.Text, text: newText }]
       }
     )
   }
@@ -245,10 +245,20 @@ const WorkspaceAppend: React.FC<{ table: ITable, fieldId: string, side: "left" |
             + NumberToIndexString(index + 1, indexConfig.type)
             + newValue.substring(indexConfig.position)
         }
-        if (side === "left") {
-          result = newText + result
+        if (result.length === 0) {
+          result.push({ type: IOpenSegmentType.Text, text: newText })
+        } else if (side === "left") {
+          if (result[0].type !== IOpenSegmentType.Text) {
+            result.unshift({ type: IOpenSegmentType.Text, text: newText })
+          } else {
+            result[0].text = newText + result[0].text
+          }
         } else {
-          result = result + newText
+          if (result[result.length - 1].type !== IOpenSegmentType.Text) {
+            result.push({ type: IOpenSegmentType.Text, text: newText })
+          } else {
+            result[result.length - 1].text += newText
+          }
         }
         return result
       }
@@ -361,7 +371,7 @@ const IndexReview: React.FC<{ text: string, disable: boolean, onChange: (enable:
 
   )
 }
-async function EditFields(table: ITable, fieldId: string, onStart: () => void, onEnd: () => void, edit: (oldValue: string, index: number) => string) {
+async function EditFields(table: ITable, fieldId: string, onStart: () => void, onEnd: () => void, edit: (oldValue: Array<IOpenSegment>, index: number) => Array<IOpenSegment>) {
   if (fieldId === "") return
   onStart()
   const view = await table.getActiveView()
@@ -375,12 +385,12 @@ async function EditFields(table: ITable, fieldId: string, onStart: () => void, o
     return
   }
   let records = await field.getFieldValueList()
-  let recordMap = new Map<string, string>()
+  let recordMap = new Map<string, Array<IOpenSegment>>()
   for (let i = 0; i < records.length; i++) {
     const id = records[i].record_id
-    const value = (records[i].value as Array<IOpenSegment>)[0]
+    const value = (records[i].value as Array<IOpenSegment>)
     if (id === undefined || value === undefined) continue
-    recordMap.set(id, value.text)
+    recordMap.set(id, value)
   }
   let index = 0
   for (let i = 0; i < vRecords.length; i++) {
@@ -388,7 +398,7 @@ async function EditFields(table: ITable, fieldId: string, onStart: () => void, o
     if (id === undefined) continue
     const oldValue = recordMap.get(id)
     if (oldValue !== undefined) {
-      const newValue = edit(oldValue, index)
+      const newValue = edit(oldValue.slice(), index)
       index += 1
       if (newValue === oldValue) continue
       field.setValue(id, newValue)
