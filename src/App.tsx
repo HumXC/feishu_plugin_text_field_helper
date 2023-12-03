@@ -193,7 +193,7 @@ const WorkspaceReplace: React.FC<{ table: ITable, fieldId: string }> = ({ table,
     )
   }
   return (
-    <div className='workspace'>
+    <div className='workspace' >
       <Input
         disabled={isDisable}
         placeholder={t("workspace.Replace.input.placeholder")}
@@ -302,8 +302,8 @@ const IndexReview: React.FC<{ text: string, disable: boolean, onChange: (enable:
     setDisable(disable)
   }, [disable])
   const updateIndexRevew = (v: number) => {
-    const i = 100 / v
-    const leftLength = text.length / i
+    const i = v / 100
+    const leftLength = text.length * i
     setIndexReviewLeft("|" + text.substring(0, leftLength))
     setIndexReviewRight(text.substring(leftLength) + "|")
     setIndexPosition(leftLength)
@@ -336,36 +336,46 @@ const IndexReview: React.FC<{ text: string, disable: boolean, onChange: (enable:
             <Select.Option label={t("indexReview.select.option.chinese")} value={IndexType.Chinese} />
           </Select>
         </div>
-        <Tooltip
-          content={
-            <span>{t("indexReview.tooltip.text1")}<br />{t("indexReview.tooltip.text2")}</span>
-          }>
-          <Tag style={{ width: "100%", height: "5rem", marginTop: "1rem" }}>
-            <Card
-              style={{ width: "100%", textAlign: "center" }}
-            >
-              <span
-                style={{
-                  textAlign: "center",
-                }}>{indexReviewLeft}
-              </span>
-              <IconSmallTriangleDown style={{ color: "red" }} />
-              <span
-                style={{
-                  textAlign: "center",
-                }}>{indexReviewRight}
-              </span>
-            </Card></Tag>
-        </Tooltip>
-        <Slider
-          // @ts-ignore
-          tipFormatter={null}
-          onChange={(v) => {
-            setSliderValue(v as number)
-            updateIndexRevew(v as number)
-          }}
-          disabled={isDisable}
-        />
+        <div hidden={text === ""}>
+          <Tooltip
+            content={
+              <span>{t("indexReview.tooltip.text1")}<br />{t("indexReview.tooltip.text2")}</span>
+            }>
+            <Tag style={{ width: "100%", height: "5rem", marginTop: "1rem" }}>
+              <Card style={{ width: "100%", textAlign: "center" }}  >
+                <span
+                  style={{
+                    textAlign: "center",
+                  }}>{indexReviewLeft}
+                </span>
+                <IconSmallTriangleDown style={{ color: "red" }} />
+                <span
+                  style={{
+                    textAlign: "center",
+                  }}>{indexReviewRight}
+                </span>
+              </Card>
+            </Tag>
+          </Tooltip> </div>
+        <div hidden={text === ""}>
+          <Slider
+            defaultValue={50}
+            marks={{ 0: "<", 50: "-", 100: ">" }}
+            style={{
+              marginBottom: "1rem",
+            }}
+            railStyle={{
+              background: "var(--semi-color-primary)",
+            }}
+            // @ts-ignore
+            tipFormatter={null}
+            onChange={(v) => {
+              setSliderValue(v as number)
+              updateIndexRevew(v as number)
+            }}
+            disabled={isDisable}
+          />
+        </div>
       </div>
     </div >
 
