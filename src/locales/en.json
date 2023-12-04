@@ -19,6 +19,7 @@
   "workspaceAppend.input.placeholder": "Enter appended text",
   "indexReview.switch.title": "Add Index",
   "indexReview.select.label": "Index Style",
+  "indexReview.select.option.none": "Don't use Index",
   "indexReview.select.option.number": "Numbers 1-2-3",
   "indexReview.select.option.letters": "Letters A-B-C",
   "indexReview.select.option.chinese": "Chinese 一-二-三",

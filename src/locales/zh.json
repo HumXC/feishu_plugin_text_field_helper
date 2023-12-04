@@ -19,6 +19,7 @@
   "workspaceAppend.input.placeholder": "输入追加的文本",
   "indexReview.switch.title": "添加序号",
   "indexReview.select.label": "序号样式",
+  "indexReview.select.option.none": "不添加序号",
   "indexReview.select.option.number": "数字 1-2-3",
   "indexReview.select.option.letters": "字母 A-B-C",
   "indexReview.select.option.chinese": "中文 一-二-三",

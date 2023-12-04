@@ -1,8 +1,8 @@
-import { Button, Card, Empty, Input, Slider, Switch, Tag, Toast, Tooltip } from '@douyinfe/semi-ui';
+import { Button, Card, Divider, Empty, Input, Slider, Tag, Toast, Tooltip } from '@douyinfe/semi-ui';
 import './App.css';
 import { bitable, ITable, FieldType, IOpenSegment, IField, IOpenSegmentType } from "@lark-base-open/js-sdk";
 import React, { useState, useEffect, } from 'react';
-import { Select, Typography } from '@douyinfe/semi-ui';
+import { Select } from '@douyinfe/semi-ui';
 import { IconSmallTriangleDown } from '@douyinfe/semi-icons'
 import { useTranslation } from 'react-i18next';
 import { IllustrationConstruction, IllustrationConstructionDark } from '@douyinfe/semi-illustrations';
@@ -13,6 +13,7 @@ const Actions = {
   Replace: 2
 }
 const IndexType = {
+  None: -1,
   Number: 0,
   Letters: 1,
   Chinese: 2,
@@ -38,6 +39,7 @@ export default function App() {
     <main className="main">
       <FieldSelect table={table} onSelect={setCurField}></FieldSelect>
       <ActionSelect onSelect={setCurAction}></ActionSelect>
+      <Divider margin='1rem' />
       <Workspace table={table} fieldId={curFieldId} action={curAction}></Workspace>
     </main >
   )
@@ -135,14 +137,14 @@ const Workspace: React.FC<{ table: ITable | undefined, fieldId: string, action: 
 
   switch (action) {
     case Actions.Replace:
-      return (<div className='mainItem'><WorkspaceReplace table={table} fieldId={fieldId}></WorkspaceReplace></div>)
+      return (<WorkspaceReplace table={table} fieldId={fieldId}></WorkspaceReplace>)
     case Actions.AppendToLeft:
-      return (<div className='mainItem'><WorkspaceAppend table={table} fieldId={fieldId} side="left"></WorkspaceAppend></div>)
+      return (<WorkspaceAppend table={table} fieldId={fieldId} side="left"></WorkspaceAppend>)
     case Actions.AppendToRight:
-      return (<div className='mainItem'><WorkspaceAppend table={table} fieldId={fieldId} side="right"></WorkspaceAppend></div>)
+      return (<WorkspaceAppend table={table} fieldId={fieldId} side="right"></WorkspaceAppend>)
     case Actions.None:
     default:
-      return (<div className='mainItem'><WorkspaceNone></WorkspaceNone></div>)
+      return (<WorkspaceNone></WorkspaceNone>)
   }
 }
 const WorkspaceNone: React.FC = () => {
@@ -163,7 +165,6 @@ const WorkspaceReplace: React.FC<{ table: ITable, fieldId: string }> = ({ table,
   const [isDisable, setDisable] = useState(false)
 
   const [indexConfig, setIndexConfig] = useState({
-    enable: false,
     position: 0,
     type: IndexType.Number
   })
@@ -183,7 +184,7 @@ const WorkspaceReplace: React.FC<{ table: ITable, fieldId: string }> = ({ table,
     EditFields(table, fieldId, startWork, stopWork,
       (_, index) => {
         let newText = newValue
-        if (indexConfig.enable) {
+        if (indexConfig.type !== IndexType.None) {
           newText = newText.substring(0, indexConfig.position)
             + NumberToIndexString(index + 1, indexConfig.type)
             + newValue.substring(indexConfig.position)
@@ -199,8 +200,8 @@ const WorkspaceReplace: React.FC<{ table: ITable, fieldId: string }> = ({ table,
         placeholder={t("workspace.Replace.input.placeholder")}
         onChange={setNewValue}
       ></Input>
-      <IndexReview text={newValue} disable={isDisable} onChange={(enable, position, type) => {
-        setIndexConfig({ enable: enable, position: position, type: type })
+      <IndexReview text={newValue} disable={isDisable} onChange={(position, type) => {
+        setIndexConfig({ position: position, type: type })
       }}></IndexReview>
       <Button
         style={{
@@ -217,7 +218,6 @@ const WorkspaceAppend: React.FC<{ table: ITable, fieldId: string, side: "left" |
   const [isDisable, setDisable] = useState(false)
 
   const [indexConfig, setIndexConfig] = useState({
-    enable: false,
     position: 0,
     type: IndexType.Number
   })
@@ -239,7 +239,7 @@ const WorkspaceAppend: React.FC<{ table: ITable, fieldId: string, side: "left" |
       (oldValue, index) => {
         let result = oldValue
         let newText = newValue
-        if (indexConfig.enable) {
+        if (indexConfig.type !== IndexType.None) {
           newText =
             newText.substring(0, indexConfig.position)
             + NumberToIndexString(index + 1, indexConfig.type)
@@ -272,8 +272,8 @@ const WorkspaceAppend: React.FC<{ table: ITable, fieldId: string, side: "left" |
         placeholder={t("workspaceAppend.input.placeholder")}
         onChange={setNewValue}
       ></Input>
-      <IndexReview text={newValue} disable={isDisable} onChange={(enable, position, type) => {
-        setIndexConfig({ enable: enable, position: position, type: type })
+      <IndexReview text={newValue} disable={isDisable} onChange={(position, type) => {
+        setIndexConfig({ position: position, type: type })
       }}></IndexReview>
       <Button
         style={{
@@ -285,15 +285,14 @@ const WorkspaceAppend: React.FC<{ table: ITable, fieldId: string, side: "left" |
   )
 }
 
-const IndexReview: React.FC<{ text: string, disable: boolean, onChange: (enable: boolean, index: number, indexType: number) => void }> = ({ text, disable = false, onChange }) => {
+const IndexReview: React.FC<{ text: string, disable: boolean, onChange: (index: number, indexType: number) => void }> = ({ text, disable = false, onChange }) => {
   const { t } = useTranslation()
   const [isDisable, setDisable] = useState(false)
   const [indexReviewLeft, setIndexReviewLeft] = useState("")
   const [indexReviewRight, setIndexReviewRight] = useState("")
-  const [sliderValue, setSliderValue] = useState(1)
+  const [sliderValue, setSliderValue] = useState(50)
 
-  const [isAddIndex, setIsAddIndex] = useState(false)
-  const [indexType, setIndexType] = useState(0)
+  const [indexType, setIndexType] = useState(IndexType.None)
   const [indexPosition, setIndexPosition] = useState(0)
   useEffect(() => {
     updateIndexRevew(sliderValue)
@@ -307,78 +306,68 @@ const IndexReview: React.FC<{ text: string, disable: boolean, onChange: (enable:
     setIndexReviewLeft("|" + text.substring(0, leftLength))
     setIndexReviewRight(text.substring(leftLength) + "|")
     setIndexPosition(leftLength)
-    onChange(isAddIndex, leftLength, indexType)
+    onChange(leftLength, indexType)
   }
   return (
-    <div>
+    <div style={{ top: "1rem" }}>
       <div style={{ display: 'flex', alignItems: 'center' }}>
-        <Typography.Title heading={6} style={{ margin: 8 }}>{t("indexReview.switch.title")}</Typography.Title>
-        <Switch disabled={isDisable} onChange={(v) => {
-          setIsAddIndex(v as boolean)
-          onChange(v as boolean, indexPosition, indexType)
-        }} />
+        <Select
+          style={{ width: "100%" }}
+          disabled={isDisable}
+          onChange={(v) => {
+            setIndexType(v as number)
+            onChange(indexPosition, v as number)
+          }}
+          insetLabel={t("indexReview.select.label")}
+          defaultValue={IndexType.None}
+          clickToHide={true}
+        >
+          <Select.Option label={t("indexReview.select.option.none")} value={IndexType.None} />
+          <Select.Option label={t("indexReview.select.option.number")} value={IndexType.Number} />
+          <Select.Option label={t("indexReview.select.option.letters")} value={IndexType.Letters} />
+          <Select.Option label={t("indexReview.select.option.chinese")} value={IndexType.Chinese} />
+        </Select>
       </div>
-      <div hidden={!isAddIndex} style={{ top: "1rem" }}>
-        <div style={{ display: 'flex', alignItems: 'center' }}>
-          <Select
-            style={{ width: "100%" }}
-            disabled={isDisable}
-            onChange={(v) => {
-              setIndexType(v as number)
-              onChange(isAddIndex, indexPosition, v as number)
-            }}
-            insetLabel={t("indexReview.select.label")}
-            defaultValue={IndexType.Number}
-            clickToHide={true}
-          >
-            <Select.Option label={t("indexReview.select.option.number")} value={IndexType.Number} />
-            <Select.Option label={t("indexReview.select.option.letters")} value={IndexType.Letters} />
-            <Select.Option label={t("indexReview.select.option.chinese")} value={IndexType.Chinese} />
-          </Select>
-        </div>
-        <div hidden={text === ""}>
-          <Tooltip
-            content={
-              <span>{t("indexReview.tooltip.text1")}<br />{t("indexReview.tooltip.text2")}</span>
-            }>
-            <Tag style={{ width: "100%", height: "5rem", marginTop: "1rem" }}>
-              <Card style={{ width: "100%", textAlign: "center" }}  >
-                <span
-                  style={{
-                    textAlign: "center",
-                  }}>{indexReviewLeft}
-                </span>
-                <IconSmallTriangleDown style={{ color: "red" }} />
-                <span
-                  style={{
-                    textAlign: "center",
-                  }}>{indexReviewRight}
-                </span>
-              </Card>
-            </Tag>
-          </Tooltip> </div>
-        <div hidden={text === ""}>
-          <Slider
-            defaultValue={50}
-            marks={{ 0: "<", 50: "-", 100: ">" }}
-            style={{
-              marginBottom: "1rem",
-            }}
-            railStyle={{
-              background: "var(--semi-color-primary)",
-            }}
-            // @ts-ignore
-            tipFormatter={null}
-            onChange={(v) => {
-              setSliderValue(v as number)
-              updateIndexRevew(v as number)
-            }}
-            disabled={isDisable}
-          />
-        </div>
+      <div hidden={text === "" || indexType === -1}>
+        <Tooltip
+          content={
+            <span>{t("indexReview.tooltip.text1")}<br />{t("indexReview.tooltip.text2")}</span>
+          }>
+          <Tag style={{ width: "100%", height: "5rem", marginTop: "1rem" }}>
+            <Card style={{ width: "100%", textAlign: "center" }}  >
+              <span
+                style={{
+                  textAlign: "center",
+                }}>{indexReviewLeft}
+              </span>
+              <IconSmallTriangleDown style={{ color: "red" }} />
+              <span
+                style={{
+                  textAlign: "center",
+                }}>{indexReviewRight}
+              </span>
+            </Card>
+          </Tag>
+        </Tooltip>
+        <Slider
+          defaultValue={50}
+          marks={{ 0: "<", 50: "-", 100: ">" }}
+          style={{
+            marginBottom: "0.5rem",
+          }}
+          railStyle={{
+            background: "var(--semi-color-primary)",
+          }}
+          // @ts-ignore
+          tipFormatter={null}
+          onChange={(v) => {
+            setSliderValue(v as number)
+            updateIndexRevew(v as number)
+          }}
+          disabled={isDisable}
+        />
       </div>
-    </div >
-
+    </div>
   )
 }
 async function EditFields(table: ITable, fieldId: string, onStart: () => void, onEnd: () => void, edit: (oldValue: Array<IOpenSegment>, index: number) => Array<IOpenSegment>) {
